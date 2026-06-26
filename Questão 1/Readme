@@ -1,1 +1,76 @@
+Shell Especialista - Sistema Baseado em
+Conhecimento (SBC)
+Este projeto implementa uma ferramenta genérica (Shell) para a construção e
+execução de Sistemas Baseados em Conhecimento voltados para tarefas de
+diagnóstico. Foi desenvolvido como resolução da Questão 1 da Lista de Exercícios de
+Inteligência Artificial.
+A aplicação permite que um Engenheiro do Conhecimento ou Especialista de Domínio
+crie, edite e elimine regras lógicas e hipóteses sem necessidade de alterar o
+código-fonte, além de possuir um Motor de Inferência (Forward e Backward Chaining) e
+Mecanismos de Explicação ("Como" e "Porquê").
 
+Estrutura de Ficheiros
+Para que o projeto funcione corretamente, a sua pasta de trabalho deve conter, no
+mínimo, os seguintes ficheiros:
+● source.py: O código-fonte principal contendo o motor de inferência e a interface
+gráfica em Streamlit.
+● base_conhecimento.json: O ficheiro base onde todas as regras e hipóteses ficam
+guardadas de forma persistente.
+● relatorio_tecnico.pdf / .tex: O relatório documentando a arquitetura da solução
+(conforme exigido na disciplina).
+
+Pré-requisitos e Instalação
+Antes de correr a aplicação, certifique-se de que tem o Python instalado no seu
+computador.
+1. Abra o seu terminal (Prompt de Comando, PowerShell ou terminal do VS Code).
+2. Instale a biblioteca gráfica necessária (Streamlit) executando o seguinte
+
+comando:
+pip install streamlit
+
+Como Executar a Aplicação
+Aplicações feitas em Streamlit não funcionam se forem executadas de forma tradicional
+(ex: clicando no botão "Play" da IDE ou rodando python source.py). Elas precisam que
+o servidor local do Streamlit seja iniciado.
+Siga os passos abaixo:
+1. Abra o terminal e navegue até à pasta onde guardou os ficheiros do projeto.
+Exemplo: cd "C:\Users\Usuario\Desktop\lista 2 questão 1"
+2. Execute o comando de inicialização do Streamlit:
+streamlit run source.py
+3. O seu navegador web padrão abrir-se-á automaticamente (geralmente no
+endereço http://localhost:8501) com a interface da aplicação pronta a ser
+utilizada.
+
+Como Utilizar o Sistema
+A interface possui um menu de navegação lateral com dois módulos principais:
+1. Editor da Base de Conhecimento (Módulo do Especialista)
+Nesta secção, pode gerir o conhecimento do sistema sem tocar numa única linha de
+código em Python. O editor está dividido em quatro separadores:
+● Adicionar: Permite inserir novas Regras de Produção (SE... ENTÃO) e novas
+Hipóteses (Diagnósticos finais).
+● Editar: Permite corrigir as condições ou conclusões de regras e hipóteses já
+existentes.
+● Excluir: Permite remover regras e hipóteses que já não sejam válidas.
+● Visualizar Base: Mostra um resumo técnico em formato JSON de tudo o que
+
+está guardado no sistema no momento.
+Nota: Qualquer alteração feita aqui é guardada imediatamente no ficheiro
+base_conhecimento.json.
+2. Consulta de Diagnóstico (Módulo do Utilizador Final)
+Esta é a secção onde o sistema faz perguntas lógicas ao utilizador para chegar a um
+diagnóstico.
+● O sistema fará uma pergunta no ecrã (ex: O(a) pc_liga é/está 'sim' ou 'nao'?).
+● Responda através dos botões Sim ou Não.
+● Mecanismo "Porquê": Se não entender a razão de o sistema estar a fazer uma
+pergunta específica, clique no botão "Por quê?". O sistema interromperá a
+dedução para explicar qual a hipótese que está a tentar validar naquele momento.
+● Mecanismo "Como": Após o diagnóstico final ser revelado no ecrã, clique no
+painel expansível "Como cheguei a esta conclusão?". O sistema mostrará a
+cadeia de regras e condições exatas que ativaram aquele diagnóstico.
+
+Tecnologias Utilizadas
+● Linguagem: Python 3
+● Interface Gráfica: Streamlit
+● Persistência de Dados: Ficheiro JSON
+● Técnicas de IA: Regras de Produção, Forward Chaining, Backward Chaining
+(DFS).
