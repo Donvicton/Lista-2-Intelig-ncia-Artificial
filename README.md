@@ -1,1 +1,1 @@
-# Lista-2-Intelig-ncia-Artificial
+# Lista-2-Inteligência-Artificial
