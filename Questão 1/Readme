@@ -16,8 +16,6 @@ mínimo, os seguintes ficheiros:
 gráfica em Streamlit.
 ● base_conhecimento.json: O ficheiro base onde todas as regras e hipóteses ficam
 guardadas de forma persistente.
-● relatorio_tecnico.pdf / .tex: O relatório documentando a arquitetura da solução
-(conforme exigido na disciplina).
 
 Pré-requisitos e Instalação
 Antes de correr a aplicação, certifique-se de que tem o Python instalado no seu
