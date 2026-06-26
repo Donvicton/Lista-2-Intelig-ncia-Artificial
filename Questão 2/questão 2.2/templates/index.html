@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Médico — Redes Bayesianas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 24px 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            color: #94a3b8;
+            font-size: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* ---- PAINEL ESQUERDO: FORMULÁRIO ---- */
+        .panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 28px;
+        }
+
+        .panel h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #64748b;
+            margin-bottom: 12px;
+            margin-top: 20px;
+        }
+
+        .section-label:first-of-type { margin-top: 0; }
+
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .option-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .option-card:hover {
+            border-color: #475569;
+            background: #1a2540;
+        }
+
+        .option-card.selected-yes {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.08);
+        }
+
+        .option-card.selected-no {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.06);
+        }
+
+        .option-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .option-icon.risco { background: rgba(251, 146, 60, 0.15); }
+        .option-icon.sintoma { background: rgba(96, 165, 250, 0.15); }
+
+        .option-info { flex: 1; }
+
+        .option-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .option-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .toggle-btns {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .toggle-btn {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1.5px solid #334155;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .toggle-btn:hover { border-color: #64748b; }
+
+        .toggle-btn.active-yes {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: #fff;
+        }
+
+        .toggle-btn.active-no {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #fff;
+        }
+
+        .btn-diagnosticar {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-diagnosticar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-diagnosticar:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-limpar {
+            width: 100%;
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1.5px solid #334155;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-limpar:hover { border-color: #64748b; color: #e2e8f0; }
+
+        /* ---- PAINEL DIREITO: RESULTADOS ---- */
+        .results-area { display: flex; flex-direction: column; gap: 24px; }
+
+        .result-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 28px;
+        }
+
+        .result-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #f1f5f9;
+        }
+
+        /* Placeholder */
+        .placeholder {
+            text-align: center;
+            padding: 80px 20px;
+            color: #475569;
+        }
+
+        .placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .placeholder p { font-size: 15px; line-height: 1.6; }
+
+        /* Resultado principal */
+        .doenca-destaque {
+            text-align: center;
+            padding: 24px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+        }
+
+        .doenca-destaque.gripe { background: linear-gradient(135deg, rgba(234,179,8,0.12), rgba(234,179,8,0.04)); border: 1px solid rgba(234,179,8,0.25); }
+        .doenca-destaque.pneumonia { background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04)); border: 1px solid rgba(239,68,68,0.25); }
+        .doenca-destaque.covid19 { background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(168,85,247,0.04)); border: 1px solid rgba(168,85,247,0.25); }
+
+        .doenca-destaque .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .doenca-destaque .nome {
+            font-size: 32px;
+            font-weight: 800;
+        }
+
+        .doenca-destaque.gripe .nome { color: #eab308; }
+        .doenca-destaque.pneumonia .nome { color: #ef4444; }
+        .doenca-destaque.covid19 .nome { color: #a855f7; }
+
+        .doenca-destaque .prob {
+            font-size: 48px;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .doenca-destaque.gripe .prob { color: #facc15; }
+        .doenca-destaque.pneumonia .prob { color: #f87171; }
+        .doenca-destaque.covid19 .prob { color: #c084fc; }
+
+        /* Barras de probabilidade */
+        .prob-bars { display: flex; flex-direction: column; gap: 16px; }
+
+        .prob-item { display: flex; flex-direction: column; gap: 6px; }
+
+        .prob-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prob-name { font-size: 14px; font-weight: 600; }
+        .prob-value { font-size: 14px; font-weight: 700; }
+
+        .prob-bar-bg {
+            height: 10px;
+            background: #0f172a;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .prob-bar-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .prob-bar-fill.gripe { background: linear-gradient(90deg, #eab308, #facc15); }
+        .prob-bar-fill.pneumonia { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .prob-bar-fill.covid19 { background: linear-gradient(90deg, #a855f7, #c084fc); }
+
+        .prob-comparacao {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Etapas da inferência */
+        .etapas-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .etapa {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px 20px;
+            position: relative;
+        }
+
+        .etapa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .etapa-num {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #3b82f6;
+        }
+
+        .etapa-evidencia {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .etapa-evidencia strong { color: #e2e8f0; }
+
+        .mini-bars { display: flex; gap: 12px; }
+
+        .mini-bar-item { flex: 1; }
+
+        .mini-bar-label {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mini-bar-bg {
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        .etapa-seta {
+            text-align: center;
+            color: #334155;
+            font-size: 20px;
+            margin: -4px 0;
+        }
+
+        /* Rede Bayesiana info */
+        .rede-info { line-height: 1.7; }
+
+        .rede-info h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-top: 16px;
+            margin-bottom: 6px;
+        }
+
+        .rede-info h4:first-child { margin-top: 0; }
+
+        .rede-info p, .rede-info li {
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        .rede-info ul {
+            padding-left: 20px;
+            margin-top: 4px;
+        }
+
+        .rede-info li { margin-bottom: 3px; }
+
+        .cpt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .cpt-table th, .cpt-table td {
+            padding: 6px 10px;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+
+        .cpt-table th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .cpt-table td { color: #e2e8f0; }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: #0f172a;
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover { color: #94a3b8; }
+
+        .tab-btn.active {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Rede SVG */
+        .rede-svg-container {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .rede-svg-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .legenda {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .legenda-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px; height: 20px;
+            border: 2.5px solid rgba(255,255,255,0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Sistema de Diagnóstico Médico</h1>
+    <p>Inferência probabilística com Redes Bayesianas — Doenças Respiratórias</p>
+</div>
+
+<div class="container">
+    <div class="grid">
+
+        <!-- FORMULÁRIO -->
+        <div class="panel" id="formPanel">
+            <h2>Informações do Paciente</h2>
+
+            <div class="section-label">Fatores de Risco</div>
+            <div class="option-group">
+                <div class="option-card" id="card-idoso">
+                    <div class="option-icon risco">👴</div>
+                    <div class="option-info">
+                        <div class="option-name">Idoso (≥ 60 anos)</div>
+                        <div class="option-desc">Idade avançada aumenta a suscetibilidade</div>
+                    </div>
+                    <div class="toggle-btns">
+                        <button class="toggle-btn" onclick="setOption('idoso', 1, this)" data-var="idoso" data-val="1">Sim</button>
+                        <button class="toggle-btn" onclick="setOption('idoso', 0, this)" data-var="idoso" data-val="0">Não</button>
+                    </div>
+                </div>
+
+                <div class="option-card" id="card-fumante">
+                    <div class="option-icon risco">🚬</div>
+                    <div class="option-info">
+                        <div class="option-name">Fumante</div>
+                        <div class="option-desc">Tabagismo é fator de risco para pneumonia</div>
+                    </div>
+                    <div class="toggle-btns">
+                        <button class="toggle-btn" onclick="setOption('fumante', 1, this)" data-var="fumante" data-val="1">Sim</button>
+                        <button class="toggle-btn" onclick="setOption('fumante', 0, this)" data-var="fumante" data-val="0">Não</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-label">Sintomas</div>
+            <div class="option-group">
+                <div class="option-card" id="card-febre">
+                    <div class="option-icon sintoma">🌡️</div>
+                    <div class="option-info">
+                        <div class="option-name">Febre</div>
+                        <div class="option-desc">Temperatura corporal elevada</div>
+                    </div>
+                    <div class="toggle-btns">
+                        <button class="toggle-btn" onclick="setOption('febre', 1, this)" data-var="febre" data-val="1">Sim</button>
+                        <button class="toggle-btn" onclick="setOption('febre', 0, this)" data-var="febre" data-val="0">Não</button>
+                    </div>
+                </div>
+
+                <div class="option-card" id="card-tosse">
+                    <div class="option-icon sintoma">😷</div>
+                    <div class="option-info">
+                        <div class="option-name">Tosse</div>
+                        <div class="option-desc">Tosse seca ou produtiva</div>
+                    </div>
+                    <div class="toggle-btns">
+                        <button class="toggle-btn" onclick="setOption('tosse', 1, this)" data-var="tosse" data-val="1">Sim</button>
+                        <button class="toggle-btn" onclick="setOption('tosse', 0, this)" data-var="tosse" data-val="0">Não</button>
+                    </div>
+                </div>
+
+                <div class="option-card" id="card-dor_muscular">
+                    <div class="option-icon sintoma">💪</div>
+                    <div class="option-info">
+                        <div class="option-name">Dor Muscular</div>
+                        <div class="option-desc">Mialgia e dores no corpo</div>
+                    </div>
+                    <div class="toggle-btns">
+                        <button class="toggle-btn" onclick="setOption('dor_muscular', 1, this)" data-var="dor_muscular" data-val="1">Sim</button>
+                        <button class="toggle-btn" onclick="setOption('dor_muscular', 0, this)" data-var="dor_muscular" data-val="0">Não</button>
+                    </div>
+                </div>
+
+                <div class="option-card" id="card-dispneia">
+                    <div class="option-icon sintoma">🫁</div>
+                    <div class="option-info">
+                        <div class="option-name">Falta de Ar (Dispneia)</div>
+                        <div class="option-desc">Dificuldade respiratória</div>
+                    </div>
+                    <div class="toggle-btns">
+                        <button class="toggle-btn" onclick="setOption('dispneia', 1, this)" data-var="dispneia" data-val="1">Sim</button>
+                        <button class="toggle-btn" onclick="setOption('dispneia', 0, this)" data-var="dispneia" data-val="0">Não</button>
+                    </div>
+                </div>
+
+                <div class="option-card" id="card-perda_olfato">
+                    <div class="option-icon sintoma">👃</div>
+                    <div class="option-info">
+                        <div class="option-name">Perda de Olfato</div>
+                        <div class="option-desc">Anosmia — altamente específico para COVID-19</div>
+                    </div>
+                    <div class="toggle-btns">
+                        <button class="toggle-btn" onclick="setOption('perda_olfato', 1, this)" data-var="perda_olfato" data-val="1">Sim</button>
+                        <button class="toggle-btn" onclick="setOption('perda_olfato', 0, this)" data-var="perda_olfato" data-val="0">Não</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-diagnosticar" id="btnDiag" onclick="diagnosticar()" disabled>
+                Realizar Diagnóstico
+            </button>
+            <button class="btn-limpar" onclick="limpar()">Limpar Seleções</button>
+        </div>
+
+        <!-- RESULTADOS -->
+        <div class="results-area" id="resultsArea">
+
+            <!-- Placeholder inicial -->
+            <div class="result-card" id="placeholderCard">
+                <div class="placeholder">
+                    <div class="placeholder-icon">🩺</div>
+                    <p>Selecione os fatores de risco e sintomas do paciente<br>para realizar a inferência diagnóstica.</p>
+                </div>
+            </div>
+
+            <!-- Resultado (escondido até clicar) -->
+            <div class="result-card" id="resultadoPrincipal" style="display:none;">
+                <h3>Resultado do Diagnóstico</h3>
+                <div id="destaqueDoenca"></div>
+                <div class="prob-bars" id="probBars"></div>
+            </div>
+
+            <div class="result-card" id="etapasCard" style="display:none;">
+                <h3>Propagação da Inferência — Passo a Passo</h3>
+                <p style="font-size:13px; color:#64748b; margin-bottom:16px;">
+                    Veja como cada evidência atualiza as probabilidades via Teorema de Bayes:
+                </p>
+                <div class="etapas-container" id="etapasContainer"></div>
+            </div>
+
+            <div class="result-card" id="redeCard" style="display:none;">
+                <h3>Como Funciona a Rede Bayesiana</h3>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('tab-grafo', this)">Estrutura da Rede</button>
+                    <button class="tab-btn" onclick="switchTab('tab-cpts', this)">Tabelas de Prob.</button>
+                    <button class="tab-btn" onclick="switchTab('tab-teoria', this)">Teoria</button>
+                </div>
+
+                <div class="tab-content active" id="tab-grafo">
+                    <div class="rede-svg-container">
+                        <svg viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Arestas -->
+                            <defs>
+                                <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                                    <path d="M0,0 L8,3 L0,6" fill="#475569"/>
+                                </marker>
+                            </defs>
+
+                            <!-- Idoso -> Gripe -->
+                            <line x1="200" y1="70" x2="110" y2="180" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- Idoso -> Pneumonia -->
+                            <line x1="220" y1="75" x2="330" y2="180" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- Idoso -> COVID -->
+                            <line x1="240" y1="70" x2="540" y2="180" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- Fumante -> Pneumonia -->
+                            <line x1="500" y1="70" x2="370" y2="180" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+                            <!-- Gripe -> Febre -->
+                            <line x1="100" y1="220" x2="90" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- Gripe -> Tosse -->
+                            <line x1="110" y1="220" x2="230" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- Gripe -> DorMuscular -->
+                            <line x1="80" y1="220" x2="70" y2="380" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+                            <!-- Pneumonia -> Febre -->
+                            <line x1="330" y1="220" x2="110" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- Pneumonia -> Tosse -->
+                            <line x1="350" y1="220" x2="250" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- Pneumonia -> Dispneia -->
+                            <line x1="370" y1="220" x2="430" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+                            <!-- COVID -> Febre -->
+                            <line x1="540" y1="220" x2="120" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- COVID -> Tosse -->
+                            <line x1="550" y1="220" x2="260" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- COVID -> DorMuscular -->
+                            <line x1="540" y1="220" x2="90" y2="380" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- COVID -> Dispneia -->
+                            <line x1="560" y1="220" x2="450" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <!-- COVID -> PerdaOlfato -->
+                            <line x1="570" y1="220" x2="610" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+                            <!-- Nós: Fatores de Risco -->
+                            <circle cx="220" cy="50" r="28" fill="#fb923c" opacity="0.9"/>
+                            <text x="220" y="55" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Idoso</text>
+
+                            <circle cx="500" cy="50" r="28" fill="#fb923c" opacity="0.9"/>
+                            <text x="500" y="55" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Fumante</text>
+
+                            <!-- Nós: Doenças -->
+                            <circle cx="100" cy="200" r="30" fill="#ef4444" opacity="0.9"/>
+                            <text x="100" y="205" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Gripe</text>
+
+                            <circle cx="350" cy="200" r="30" fill="#ef4444" opacity="0.9"/>
+                            <text x="350" y="196" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">Pneumo-</text>
+                            <text x="350" y="210" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">nia</text>
+
+                            <circle cx="560" cy="200" r="30" fill="#ef4444" opacity="0.9"/>
+                            <text x="560" y="205" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">COVID</text>
+
+                            <!-- Nós: Sintomas -->
+                            <circle cx="100" cy="340" r="26" fill="#60a5fa" opacity="0.9"/>
+                            <text x="100" y="345" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Febre</text>
+
+                            <circle cx="245" cy="340" r="26" fill="#60a5fa" opacity="0.9"/>
+                            <text x="245" y="345" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Tosse</text>
+
+                            <circle cx="440" cy="340" r="26" fill="#60a5fa" opacity="0.9"/>
+                            <text x="440" y="336" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">Disp-</text>
+                            <text x="440" y="349" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">neia</text>
+
+                            <circle cx="610" cy="340" r="26" fill="#60a5fa" opacity="0.9"/>
+                            <text x="610" y="336" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">Perda</text>
+                            <text x="610" y="349" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">Olfato</text>
+
+                            <circle cx="70" cy="400" r="26" fill="#60a5fa" opacity="0.9"/>
+                            <text x="70" y="396" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">Dor</text>
+                            <text x="70" y="409" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">Muscular</text>
+                        </svg>
+                    </div>
+                    <div class="legenda">
+                        <div class="legenda-item"><div class="legenda-dot" style="background:#fb923c"></div> Fatores de Risco</div>
+                        <div class="legenda-item"><div class="legenda-dot" style="background:#ef4444"></div> Doenças</div>
+                        <div class="legenda-item"><div class="legenda-dot" style="background:#60a5fa"></div> Sintomas</div>
+                    </div>
+                    <div class="rede-info" style="margin-top:16px;">
+                        <h4>Estrutura do Grafo Direcionado Acíclico (DAG)</h4>
+                        <p>As setas indicam relações de <strong>causa e efeito</strong>. Fatores de risco influenciam a probabilidade das doenças, que por sua vez causam os sintomas observáveis.</p>
+                        <h4>Independências Condicionais</h4>
+                        <ul>
+                            <li><strong>Gripe ⊥ Fumante</strong> — fumar não influencia gripe diretamente</li>
+                            <li><strong>Gripe ⊥ Pneumonia | Idoso</strong> — doenças são independentes dado o fator de risco</li>
+                            <li><strong>PerdaOlfato ⊥ Pneumonia | COVID19</strong> — perda de olfato depende apenas de COVID</li>
+                            <li><strong>DorMuscular ⊥ Pneumonia | Gripe, COVID19</strong> — dor muscular não é causada por pneumonia</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-cpts">
+                    <div class="rede-info">
+                        <h4>Probabilidades A Priori (Nós Raiz)</h4>
+                        <table class="cpt-table">
+                            <tr><th>Variável</th><th>P(Sim)</th><th>P(Não)</th><th>Fonte</th></tr>
+                            <tr><td>Idoso (≥60)</td><td>15%</td><td>85%</td><td>IBGE — proporção da população ≥ 60 anos</td></tr>
+                            <tr><td>Fumante</td><td>12%</td><td>88%</td><td>PNS/IBGE — prevalência de tabagismo adulto</td></tr>
+                        </table>
+
+                        <h4>P(Doença | Fatores de Risco)</h4>
+                        <table class="cpt-table">
+                            <tr><th>Gripe</th><th>Idoso = Não</th><th>Idoso = Sim</th></tr>
+                            <tr><td>P(Gripe = Sim)</td><td>10%</td><td>20%</td></tr>
+                        </table>
+                        <table class="cpt-table" style="margin-top:8px;">
+                            <tr><th>Pneumonia</th><th>¬Idoso, ¬Fum.</th><th>¬Idoso, Fum.</th><th>Idoso, ¬Fum.</th><th>Idoso, Fum.</th></tr>
+                            <tr><td>P(Pneum. = Sim)</td><td>3%</td><td>8%</td><td>12%</td><td>25%</td></tr>
+                        </table>
+                        <table class="cpt-table" style="margin-top:8px;">
+                            <tr><th>COVID-19</th><th>Idoso = Não</th><th>Idoso = Sim</th></tr>
+                            <tr><td>P(COVID = Sim)</td><td>5%</td><td>12%</td></tr>
+                        </table>
+
+                        <h4>P(Sintoma | Doenças) — Exemplos Selecionados</h4>
+                        <table class="cpt-table">
+                            <tr><th>Perda Olfato</th><th>COVID = Não</th><th>COVID = Sim</th></tr>
+                            <tr><td>P(PerdaOlfato = Sim)</td><td>2%</td><td>70%</td></tr>
+                        </table>
+                        <p style="margin-top:8px;font-size:12px;color:#64748b;">A perda de olfato é o sintoma mais discriminante: 70% dos pacientes com COVID apresentam, contra apenas 2% sem a doença. Isso explica por que esse sintoma causa grande salto na probabilidade de COVID-19.</p>
+
+                        <table class="cpt-table" style="margin-top:12px;">
+                            <tr><th>Dispneia</th><th>¬Pneum, ¬COVID</th><th>¬Pneum, COVID</th><th>Pneum, ¬COVID</th><th>Pneum, COVID</th></tr>
+                            <tr><td>P(Dispneia = Sim)</td><td>4%</td><td>60%</td><td>70%</td><td>85%</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-teoria">
+                    <div class="rede-info">
+                        <h4>O que é uma Rede Bayesiana?</h4>
+                        <p>Uma Rede Bayesiana é um modelo gráfico probabilístico que representa um conjunto de variáveis e suas dependências condicionais através de um <strong>Grafo Direcionado Acíclico (DAG)</strong>. Cada nó possui uma <strong>Tabela de Probabilidade Condicional (CPT)</strong> que quantifica a influência dos nós pais.</p>
+
+                        <h4>Teorema de Bayes</h4>
+                        <p>A base da inferência é o Teorema de Bayes:</p>
+                        <p style="text-align:center; font-size:16px; margin:12px 0; color:#f1f5f9; font-weight:600;">
+                            P(D|E) = P(E|D) × P(D) / P(E)
+                        </p>
+                        <ul>
+                            <li><strong>P(D|E)</strong> — probabilidade a posteriori da doença dadas as evidências</li>
+                            <li><strong>P(E|D)</strong> — verossimilhança (da CPT)</li>
+                            <li><strong>P(D)</strong> — probabilidade a priori da doença</li>
+                            <li><strong>P(E)</strong> — probabilidade marginal das evidências</li>
+                        </ul>
+
+                        <h4>Como funciona a Inferência?</h4>
+                        <p>O algoritmo de <strong>Eliminação de Variáveis</strong> calcula a distribuição posterior marginalizando (somando) as variáveis não observadas. A cada nova evidência inserida, todas as probabilidades são recalculadas, propagando a informação pela rede.</p>
+
+                        <h4>Vantagens sobre Sistemas de Regras</h4>
+                        <ul>
+                            <li><strong>Incerteza quantificada</strong> — trabalha com graus de crença, não decisões binárias</li>
+                            <li><strong>Atualização incremental</strong> — cada evidência refina o diagnóstico continuamente</li>
+                            <li><strong>Inferência bidirecional</strong> — pode ir de sintomas para doenças ou vice-versa</li>
+                            <li><strong>Transparência</strong> — as relações causais e probabilidades são explícitas e auditáveis</li>
+                            <li><strong>Robustez</strong> — lida bem com evidências incompletas ou contraditórias</li>
+                        </ul>
+
+                        <h4>Limitações deste Modelo</h4>
+                        <ul>
+                            <li>CPTs estimadas para fins educacionais (não calibradas com dados reais)</li>
+                            <li>Variáveis binárias simplificadas (sem graus de severidade)</li>
+                            <li>Não considera comorbidades, sazonalidade ou variantes virais</li>
+                            <li>Conjunto limitado de 3 doenças e 5 sintomas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const state = {};
+
+    function setOption(varName, value, btnEl) {
+        const card = document.getElementById('card-' + varName);
+        const btns = card.querySelectorAll('.toggle-btn');
+
+        btns.forEach(b => b.classList.remove('active-yes', 'active-no'));
+
+        if (state[varName] === value) {
+            delete state[varName];
+            card.classList.remove('selected-yes', 'selected-no');
+        } else {
+            state[varName] = value;
+            card.classList.remove('selected-yes', 'selected-no');
+            if (value === 1) {
+                btnEl.classList.add('active-yes');
+                card.classList.add('selected-yes');
+            } else {
+                btnEl.classList.add('active-no');
+                card.classList.add('selected-no');
+            }
+        }
+
+        document.getElementById('btnDiag').disabled = Object.keys(state).length === 0;
+    }
+
+    function limpar() {
+        Object.keys(state).forEach(k => delete state[k]);
+        document.querySelectorAll('.option-card').forEach(c => {
+            c.classList.remove('selected-yes', 'selected-no');
+        });
+        document.querySelectorAll('.toggle-btn').forEach(b => {
+            b.classList.remove('active-yes', 'active-no');
+        });
+        document.getElementById('btnDiag').disabled = true;
+        document.getElementById('placeholderCard').style.display = '';
+        document.getElementById('resultadoPrincipal').style.display = 'none';
+        document.getElementById('etapasCard').style.display = 'none';
+        document.getElementById('redeCard').style.display = 'none';
+    }
+
+    async function diagnosticar() {
+        const btn = document.getElementById('btnDiag');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading"></span>Calculando...';
+
+        try {
+            const resp = await fetch('/diagnostico', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(state)
+            });
+
+            const data = await resp.json();
+            if (data.erro) { alert(data.erro); return; }
+
+            renderResultado(data);
+        } catch (e) {
+            alert('Erro ao conectar com o servidor.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Realizar Diagnóstico';
+        }
+    }
+
+    function renderResultado(data) {
+        document.getElementById('placeholderCard').style.display = 'none';
+        document.getElementById('resultadoPrincipal').style.display = '';
+        document.getElementById('etapasCard').style.display = '';
+        document.getElementById('redeCard').style.display = '';
+
+        const dPrincipal = data.doenca_principal;
+        const prob = data.resultado_final[dPrincipal];
+        const cls = dPrincipal.toLowerCase().replace('-', '');
+
+        document.getElementById('destaqueDoenca').innerHTML = `
+            <div class="doenca-destaque ${cls}">
+                <div class="label">Diagnóstico mais provável</div>
+                <div class="nome">${formatDoenca(dPrincipal)}</div>
+                <div class="prob">${prob.toFixed(1)}%</div>
+            </div>
+        `;
+
+        const barsHTML = ['Gripe', 'Pneumonia', 'COVID19'].map(d => {
+            const p = data.resultado_final[d];
+            const pri = data.priori[d];
+            const diff = (p - pri).toFixed(1);
+            const diffStr = diff > 0 ? `+${diff}%` : `${diff}%`;
+            const cls = d.toLowerCase();
+            return `
+                <div class="prob-item">
+                    <div class="prob-header">
+                        <span class="prob-name">${formatDoenca(d)}</span>
+                        <span class="prob-value" style="color:var(--c-${cls}, #e2e8f0)">${p.toFixed(1)}%</span>
+                    </div>
+                    <div class="prob-bar-bg">
+                        <div class="prob-bar-fill ${cls}" style="width:${Math.min(p, 100)}%"></div>
+                    </div>
+                    <div class="prob-comparacao">
+                        <span>A priori: ${pri.toFixed(1)}%</span>
+                        <span>Variação: ${diffStr}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('probBars').innerHTML = barsHTML;
+
+        let etapasHTML = '';
+        data.etapas.forEach((etapa, i) => {
+            if (i > 0) etapasHTML += '<div class="etapa-seta">▼</div>';
+
+            const miniBars = ['Gripe', 'Pneumonia', 'COVID19'].map(d => {
+                const p = etapa.probabilidades[d];
+                const cls = d.toLowerCase();
+                return `
+                    <div class="mini-bar-item">
+                        <div class="mini-bar-label">
+                            <span>${formatDoenca(d)}</span>
+                            <span>${p.toFixed(1)}%</span>
+                        </div>
+                        <div class="mini-bar-bg">
+                            <div class="mini-bar-fill ${cls}" style="width:${Math.min(p, 100)}%; background: var(--bg-${cls})"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            etapasHTML += `
+                <div class="etapa">
+                    <div class="etapa-header">
+                        <span class="etapa-num">Etapa ${i + 1}</span>
+                        <span class="etapa-evidencia">+ <strong>${etapa.evidencia_adicionada}</strong></span>
+                    </div>
+                    <div class="mini-bars">${miniBars}</div>
+                </div>
+            `;
+        });
+
+        document.getElementById('etapasContainer').innerHTML = etapasHTML;
+
+        document.querySelectorAll('.mini-bar-fill').forEach(el => {
+            const cls = el.classList[1];
+            const colors = { gripe: '#eab308', pneumonia: '#ef4444', covid19: '#a855f7' };
+            el.style.background = colors[cls] || '#3b82f6';
+        });
+
+        document.getElementById('resultadoPrincipal').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function formatDoenca(d) {
+        const map = { 'Gripe': 'Gripe', 'Pneumonia': 'Pneumonia', 'COVID19': 'COVID-19' };
+        return map[d] || d;
+    }
+
+    function switchTab(tabId, btnEl) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btnEl.classList.add('active');
+    }
+</script>
+
+</body>
+</html>
