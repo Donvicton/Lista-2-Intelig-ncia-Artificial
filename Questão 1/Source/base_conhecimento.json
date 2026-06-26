@@ -1,0 +1,180 @@
+{
+    "regras": [
+        {
+            "id": "R1",
+            "condicoes": [
+                "pc_liga = não",
+                "luzes_led_acesas = nao"
+            ],
+            "conclusao": "energia = sem_alimentacao"
+        },
+        {
+            "id": "R2",
+            "condicoes": [
+                "energia = sem_alimentacao",
+                "cabo_energia_conectado = sim"
+            ],
+            "conclusao": "diagnostico = falha_na_fonte"
+        },
+        {
+            "id": "R3",
+            "condicoes": [
+                "pc_liga = sim",
+                "bipes_na_inicializacao = sim"
+            ],
+            "conclusao": "erro_post = sim"
+        },
+        {
+            "id": "R4",
+            "condicoes": [
+                "erro_post = sim",
+                "padrao_bipes = curtos_repetitivos"
+            ],
+            "conclusao": "diagnostico = problema_memoria_ram"
+        },
+        {
+            "id": "R5",
+            "condicoes": [
+                "pc_liga = sim",
+                "video_na_tela = nao",
+                "ventoinhas_girando = sim"
+            ],
+            "conclusao": "suspeita = placa_mae_ou_video"
+        },
+        {
+            "id": "R6",
+            "condicoes": [
+                "suspeita = placa_mae_ou_video",
+                "bipes_na_inicializacao = nao"
+            ],
+            "conclusao": "diagnostico = falha_na_placa_mae"
+        },
+        {
+            "id": "R7",
+            "condicoes": [
+                "pc_desliga_sozinho = sim",
+                "uso_intenso = sim"
+            ],
+            "conclusao": "suspeita = aquecimento"
+        },
+        {
+            "id": "R8",
+            "condicoes": [
+                "suspeita = aquecimento",
+                "barulho_ventoinha_alto = sim"
+            ],
+            "conclusao": "diagnostico = superaquecimento_cpu"
+        },
+        {
+            "id": "R9",
+            "condicoes": [
+                "tela_azul = sim",
+                "ocorreu_durante_jogo = sim"
+            ],
+            "conclusao": "suspeita = gpu_ou_temperatura"
+        },
+        {
+            "id": "R10",
+            "condicoes": [
+                "suspeita = gpu_ou_temperatura",
+                "artefatos_na_tela = sim"
+            ],
+            "conclusao": "diagnostico = falha_na_placa_de_video"
+        },
+        {
+            "id": "R11",
+            "condicoes": [
+                "sem_som_no_fone = sim",
+                "fone_reconhecido_no_sistema = sim"
+            ],
+            "conclusao": "suspeita = problema_fisico_fone"
+        },
+        {
+            "id": "R12",
+            "condicoes": [
+                "suspeita = problema_fisico_fone",
+                "som_volta_ao_mexer_no_cabo = sim"
+            ],
+            "conclusao": "diagnostico = cabo_audio_iem_defeituoso"
+        },
+        {
+            "id": "R13",
+            "condicoes": [
+                "sem_som_no_fone = sim",
+                "fone_reconhecido_no_sistema = nao"
+            ],
+            "conclusao": "suspeita = falha_driver_ou_porta"
+        },
+        {
+            "id": "R14",
+            "condicoes": [
+                "suspeita = falha_driver_ou_porta",
+                "testado_em_outro_dispositivo = sim",
+                "funciona_no_outro = sim"
+            ],
+            "conclusao": "diagnostico = driver_audio_desatualizado"
+        },
+        {
+            "id": "R15",
+            "condicoes": [
+                "som_baixo = sim",
+                "chiado_constante = sim"
+            ],
+            "conclusao": "suspeita = interferencia_ou_impedancia"
+        },
+        {
+            "id": "R16",
+            "condicoes": [
+                "suspeita = interferencia_ou_impedancia",
+                "conectado_direto_na_placa_mae = sim"
+            ],
+            "conclusao": "diagnostico = necessidade_de_dac_externo"
+        },
+        {
+            "id": "R17",
+            "condicoes": [
+                "teclado_nao_responde = sim",
+                "mouse_funciona = sim"
+            ],
+            "conclusao": "diagnostico = porta_usb_com_defeito"
+        },
+        {
+            "id": "R18",
+            "condicoes": [
+                "lentidao_extrema = sim",
+                "uso_disco_100_porcento = sim"
+            ],
+            "conclusao": "diagnostico = falha_no_hd_ssd"
+        },
+        {
+            "id": "R19",
+            "condicoes": [
+                "internet_cai_frequente = sim",
+                "icone_wifi_com_aviso = sim"
+            ],
+            "conclusao": "diagnostico = problema_adaptador_rede"
+        },
+        {
+            "id": "R20",
+            "condicoes": [
+                "bateria_nao_carrega = sim",
+                "notebook_conectado_na_tomada = sim"
+            ],
+            "conclusao": "diagnostico = vida_util_bateria_esgotada"
+        }
+    ],
+    "hipoteses": [
+        "diagnostico = falha_na_placa_mae",
+        "diagnostico = superaquecimento_cpu",
+        "diagnostico = problema_memoria_ram",
+        "diagnostico = cabo_audio_iem_defeituoso",
+        "diagnostico = driver_audio_desatualizado",
+        "diagnostico = falha_na_fonte",
+        "diagnostico = falha_na_placa_de_video",
+        "diagnostico = necessidade_de_dac_externo",
+        "diagnostico = porta_usb_com_defeito",
+        "diagnostico = falha_no_hd_ssd",
+        "diagnostico = problema_adaptador_rede",
+        "diagnostico = vida_util_bateria_esgotada"
+    ]
+}
