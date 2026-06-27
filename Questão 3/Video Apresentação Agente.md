@@ -2,8 +2,7 @@
 
 Clique na imagem abaixo para assistir à apresentação do trabalho no YouTube:
 
-![Assista ao vídeo](https://img.youtube.com/vi/QafKluAMRNQ/0.jpg)](https://www.youtube.com/watch?v=QafKluAMRNQ)
-
+[![Assista ao vídeo](https://img.youtube.com/vi/QafKluAMRNQ/0.jpg)](https://www.youtube.com/watch?v=QafKluAMRNQ)
 ---
 
 ### 📌 OBSERVAÇÃO :
